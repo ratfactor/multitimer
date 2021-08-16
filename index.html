@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>multitimer</title>
+	<style>
+        h1 { color: red; }
+        .multitimer {
+            display: inline-block;
+            border: 4px solid #666;
+            margin: 1em;
+            width: 300px;
+        }
+        .multitimer .title {
+            text-align: center;
+            font-size: 1.2em;
+            padding: 10px;
+            background: #CCC;
+        }
+        .multitimer .display {
+            text-align: center;
+            font-size: 2em;
+            font-family: sans-serif;
+            background: #000;
+            color: #FFF;
+        }
+        .multitimer .display sec { color: #888; }
+        .multitimer .startstop {
+            width: 100%; height: 200px;
+            font-size: 2em;
+            background-color: #DDD;
+        }
+        .multitimer .startstop.running {
+            background-color: #BEF;
+        }
+        .multitimer .clear {
+            width: 100%;
+            background-color: #FBB;
+        }
+	</style>
+</head>
+<body>
+
+<h1>MultiTimer</h1>
+
+<div class="multitimer">
+    <div class="title">Work - Development</div>
+    <div class="display"><min>0</min><sec>:00</sec></div>
+    <button class="startstop">Start</button>
+    <button class="clear">Double-click to Clear</button>
+</div>
+
+<div class="multitimer">
+    <div class="title">Work - Everything Else</div>
+    <div class="display"><min>0</min><sec>:00</sec></div>
+    <button class="startstop">Start</button>
+    <button class="clear">Clear</button>
+</div>
+
+<div class="multitimer">
+    <div class="title">Personal Proj.</div>
+    <div class="display"><min>0</min><sec>:00</sec></div>
+    <button class="startstop">Start</button>
+    <button class="clear">Clear</button>
+</div>
+
+<script>
+// Initialize and store all timers
+var timers = [];
+document.querySelectorAll(".multitimer").forEach(function(eltimer){
+    timers.push(Timer(eltimer));
+});
+
+function Timer(eltimer){
+    var running = false;
+    var running_started = 0;
+    var stored_seconds = 0;
+    var title = eltimer.querySelector(".title").innerHTML;
+
+    // Get on-screen elements
+    var elstartstop   = eltimer.querySelector(".startstop");
+    var elclear       = eltimer.querySelector(".clear");
+    var eldisplay_min = eltimer.querySelector(".display min")
+    var eldisplay_sec = eltimer.querySelector(".display sec")
+
+    // Restore previously-saved seconds for this time (in case of accidental refresh)
+    if(sessionStorage.getItem(title)){
+        stored_seconds = parseInt(sessionStorage.getItem(title), 10);
+        show_time(); // Display immediately to allay fear of lost time
+        console.log("restored",stored_seconds);
+    }
+
+    // Setup timer display (updates once per second)
+    setInterval( show_time, 1000 );
+
+    // Setup start/stop button
+    elstartstop.addEventListener("click", function(event) {
+        if(running){
+            // STOP!
+            stored_seconds = get_elapsed_seconds();
+            elstartstop.classList.remove("running");
+            elstartstop.innerHTML = "Start";
+        } else {
+            // START!
+            running_started = Math.floor(performance.now() / 1000);
+            elstartstop.classList.add("running");
+            elstartstop.innerHTML = "Stop";
+        }
+
+        running = !running;
+    });
+
+    // Setup clear button (double-click to clear)
+    elclear.addEventListener("dblclick", function(event) {
+        running = false;
+        elstartstop.classList.remove("running");
+        elstartstop.innerHTML = "Start";
+        stored_seconds = 0;
+        sessionStorage.setItem(title, 0);
+        show_time(); // show 0:00 immediately
+    });
+
+
+    function get_elapsed_seconds(){
+        var sec = stored_seconds;
+
+        if(running){
+            sec += Math.floor(performance.now() / 1000) - running_started;
+
+            // Store the new number of seconds in persistant storage
+            sessionStorage.setItem(title, sec);
+            console.log("stored ",title,sec);
+        }
+
+        return sec;
+    }
+
+    function show_time(){
+        var sec = get_elapsed_seconds();
+
+        // Split into minutes and seconds elapsed for display
+        var s = sec % 60;
+        var m = Math.floor((sec - s) / 60);
+
+        eldisplay_min.innerHTML = m;
+        eldisplay_sec.innerHTML = ":" + (s<10?'0':'') + s;
+    }
+}
+</script>
+
+</body>
+</html>
