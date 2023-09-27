@@ -1,4 +1,8 @@
 # multitimer
+
+**MOVED!** Hello, I am moving my repos to http://ratfactor.com/repos/
+and setting them to read-only ("archived") on GitHub. Thank you, _-Dave_
+
 Multiple count-up minute timers in a single HTML document to customize and run!
 
 ![screenshot](multitimer.png)
